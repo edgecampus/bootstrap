@@ -30,6 +30,8 @@
     this.$menu = $(this.options.menu).appendTo('body')
     this.source = this.options.source
     this.shown = false
+    if (this.source && this.source.length>0 && this.source[0].key)
+      this.keyVal = true
     this.listen()
   }
 
@@ -38,9 +40,15 @@
     constructor: Typeahead
 
   , select: function () {
-      var val = this.$menu.find('.active').attr('data-value')
+      var val
+      if (this.keyVal) {
+        var key = this.$menu.find('.active').attr('data-key')
+        val = this.$menu.find('.active').attr('data-value')
+        this.$element.attr('data-key', key)
+      } else
+        val = this.$menu.find('.active').attr('data-value')
       this.$element.val(val)
-      this.$element.change();
+      this.$element.change()
       return this.hide()
     }
 
@@ -90,6 +98,7 @@
     }
 
   , matcher: function (item) {
+      if (this.keyVal) item = item.val
       return ~item.toLowerCase().indexOf(this.query.toLowerCase())
     }
 
@@ -100,6 +109,12 @@
         , item
 
       while (item = items.shift()) {
+        if (this.keyVal) {
+          if (!item.val.toLowerCase().indexOf(this.query.toLowerCase())) beginswith.push(item)
+          else if (~item.val.indexOf(this.query)) caseSensitive.push(item)
+          else caseInsensitive.push(item)
+          continue
+        }
         if (!item.toLowerCase().indexOf(this.query.toLowerCase())) beginswith.push(item)
         else if (~item.indexOf(this.query)) caseSensitive.push(item)
         else caseInsensitive.push(item)
@@ -118,6 +133,14 @@
       var that = this
 
       items = $(items).map(function (i, item) {
+        if (that.keyVal === true) {
+          i = $(that.options.item).attr({
+            'data-key':item.key
+            , 'data-value':item.val
+          })
+          i.find('a').html(that.highlighter(item.val))
+          return i[0]
+        }
         i = $(that.options.item).attr('data-value', item)
         i.find('a').html(that.highlighter(item))
         return i[0]

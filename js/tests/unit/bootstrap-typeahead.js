@@ -129,4 +129,30 @@ $(function () {
 
         typeahead.$menu.remove()
       })
+
+      test("should set input attribute and value to selected item", function () {
+        var $input = $('<input />').typeahead({
+              source: [
+                {key:'1', val:'aa'}
+                , {key:'2', val:'ab'}
+                , {key:'3', val:'ac'}
+              ]
+            })
+          , typeahead = $input.data('typeahead')
+          , changed = false
+
+        $input.val('a')
+        typeahead.lookup()
+
+        $input.change(function() { changed = true });
+
+        $(typeahead.$menu.find('li')[1]).mouseover().click()
+
+        equals($input.val(), 'ab', 'input value was correctly set')
+        equals($input.attr('data-key'), '2', 'input attribute was correctly set')
+        ok(!typeahead.$menu.is(':visible'), 'the menu was hidden')
+        ok(changed, 'a change event was fired')
+
+        typeahead.$menu.remove()
+      })
 })

@@ -130,14 +130,20 @@ $(function () {
         typeahead.$menu.remove()
       })
 
-      test("should set input attribute and value to selected item", function () {
-        var $input = $('<input />').typeahead({
+      test("should set hidden and normal input values to selected item", function () {
+        var fieldName = 'submitKey'
+          , $form = $('<form>')
+          , $input = $('<input />')
+            .attr('name', fieldName)
+            .appendTo($form)
+            .typeahead({
               source: [
                 {key:'1', val:'aa'}
                 , {key:'2', val:'ab'}
                 , {key:'3', val:'ac'}
               ]
             })
+          , $hidden = $('input[type=hidden]', $form)
           , typeahead = $input.data('typeahead')
           , changed = false
 
@@ -149,7 +155,9 @@ $(function () {
         $(typeahead.$menu.find('li')[1]).mouseover().click()
 
         equals($input.val(), 'ab', 'input value was correctly set')
-        equals($input.attr('data-key'), '2', 'input attribute was correctly set')
+        equals($hidden.val(), '2', 'hidden input value was correctly set')
+        equals($input.attr('name'), undefined, 'input name attribute was removed')
+        equals($hidden.attr('name'), fieldName, 'hidden input has original input\'s name attribute')
         ok(!typeahead.$menu.is(':visible'), 'the menu was hidden')
         ok(changed, 'a change event was fired')
 

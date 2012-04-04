@@ -30,7 +30,14 @@
     this.$menu = $(this.options.menu).appendTo('body')
     this.source = this.options.source
     this.shown = false
-    if (this.source && $.isPlainObject(this.source[0])) this.initKeyValue(element)
+    if (this.source && $.isPlainObject(this.source[0])) {
+      var hidden
+      if (hidden = this.initKeyValue(element)) {
+        this.$form = $(element.form)
+        this.$hidden = hidden
+        this.keyValue = true
+      }
+    }
     this.listen()
   }
 
@@ -40,25 +47,32 @@
 
   , initKeyValue: function(element) {
       if (element.form) {
+        var hidden
         if (element.name) {
-          this.$hidden = $('<input>').attr(
+          hidden = $('<input>').attr(
             {name:element.name, type:'hidden'}
           ).appendTo(element.form)
           this.$element.removeAttr('name')
-        } else
-          this.$hidden = $('<input>').attr('type','hidden').appendTo(element.form)
-        this.keyValue = true
+        } else {
+          hidden = $('<input>').attr('type','hidden').appendTo(element.form)
+        }
+        return hidden
       }
+      return void(0)
     }
 
   , select: function () {
-      if (this.keyValue) {
-        var key = this.$menu.find('.active').attr('data-key')
-        this.$hidden.val(key)
-      }
       var val = this.$menu.find('.active').attr('data-value')
       this.$element.val(val)
       this.$element.change()
+      if (this.keyValue) {
+        var key = this.$menu.find('.active').attr('data-key')
+          , retVal
+        this.$hidden.val(key)
+        retVal = this.hide()
+        this.$form.submit()
+        return retVal
+      }
       return this.hide()
     }
 

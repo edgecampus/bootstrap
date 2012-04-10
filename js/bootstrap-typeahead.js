@@ -27,7 +27,11 @@
     this.matcher = this.options.matcher || this.matcher
     this.sorter = this.options.sorter || this.sorter
     this.highlighter = this.options.highlighter || this.highlighter
-    this.$menu = $(this.options.menu).appendTo('body')
+    if (this.options.appendToParent) {
+      this.$menu = $(this.options.menu).appendTo(this.$element.parent())
+    } else {
+      this.$menu = $(this.options.menu).appendTo('body')
+    }
     this.source = this.options.source
     this.shown = false
     if (this.source && $.isPlainObject(this.source[0])) {

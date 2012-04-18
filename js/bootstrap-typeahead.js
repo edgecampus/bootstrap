@@ -27,20 +27,23 @@
     this.matcher = this.options.matcher || this.matcher
     this.sorter = this.options.sorter || this.sorter
     this.highlighter = this.options.highlighter || this.highlighter
-    if (this.options.appendToParent) {
-      this.$menu = $(this.options.menu).appendTo(this.$element.parent())
+    if (this.options.insertAfterElement) {
+      this.$menu = $(this.options.menu).insertAfter(this.$element)
     } else {
       this.$menu = $(this.options.menu).appendTo('body')
     }
     this.source = this.options.source
     this.shown = false
-    if (this.source && $.isPlainObject(this.source[0])) {
-      var hidden
-      if (hidden = this.initKeyValue(element)) {
-        this.$form = $(element.form)
-        this.$hidden = hidden
-        this.keyValue = true
+    if (this.source.length > 0 && $.isPlainObject(this.source[0])) {
+      var hidden = $('<input>')
+      hidden.attr('type', 'hidden')
+      if (element.name) {
+        hidden.attr('name', element.name)
+        this.$element.removeAttr('name')
       }
+      hidden.insertAfter(element)
+      this.$hidden = hidden
+      this.keyValue = true
     }
     this.listen()
   }
@@ -48,22 +51,6 @@
   Typeahead.prototype = {
 
     constructor: Typeahead
-
-  , initKeyValue: function(element) {
-      if (element) {
-        var hidden
-        if (element.name) {
-          hidden = $('<input>').attr(
-            {name:element.name, type:'hidden'}
-          ).insertAfter(element)
-          this.$element.removeAttr('name')
-        } else {
-          hidden = $('<input>').attr('type','hidden').insertAfter(element)
-        }
-        return hidden
-      }
-      return void(0)
-    }
 
   , select: function () {
       var val = this.$menu.find('.active').attr('data-value')

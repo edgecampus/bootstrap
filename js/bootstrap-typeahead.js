@@ -50,15 +50,15 @@
     constructor: Typeahead
 
   , initKeyValue: function(element) {
-      if (element.form) {
+      if (element) {
         var hidden
         if (element.name) {
           hidden = $('<input>').attr(
             {name:element.name, type:'hidden'}
-          ).appendTo(element.form)
+          ).insertAfter(element)
           this.$element.removeAttr('name')
         } else {
-          hidden = $('<input>').attr('type','hidden').appendTo(element.form)
+          hidden = $('<input>').attr('type','hidden').insertAfter(element)
         }
         return hidden
       }
@@ -73,8 +73,8 @@
         var key = this.$menu.find('.active').attr('data-key')
           , retVal
         this.$hidden.val(key)
+        this.$element.trigger('selected', key)
         retVal = this.hide()
-        this.$form.submit()
         return retVal
       }
       return this.hide()

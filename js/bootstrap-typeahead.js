@@ -24,6 +24,9 @@
   var Typeahead = function ( element, options ) {
     this.$element = $(element)
     this.options = $.extend({}, $.fn.typeahead.defaults, options)
+    this.label = this.options.label
+    this.value = this.options.value
+    this.options = $.extend({}, $.fn.typeahead.defaults, options)
     this.matcher = this.options.matcher || this.matcher
     this.sorter = this.options.sorter || this.sorter
     this.highlighter = this.options.highlighter || this.highlighter
@@ -34,7 +37,8 @@
     }
     this.source = this.options.source
     this.shown = false
-    if (this.source.length > 0 && $.isPlainObject(this.source[0])) {
+    this.objectSource = this.source.length > 0 && $.isPlainObject(this.source[0])
+    if (this.objectSource) {
       var hidden = $('<input>')
       hidden.attr('type', 'hidden')
       if (element.name) {
@@ -43,7 +47,11 @@
       }
       hidden.insertAfter(element)
       this.$hidden = hidden
-      this.keyValue = true
+      this.label = this.label || function (item) {return item.label}
+      this.value = this.value || function (item) {return item.value}
+    } else {
+      this.label = this.label || function (item) {return item}
+      this.value = this.label
     }
     this.listen()
   }
@@ -53,16 +61,16 @@
     constructor: Typeahead
 
   , select: function () {
-      var val = this.$menu.find('.active').attr('data-value')
-      this.$element.val(val)
+      var item = this.$menu.find('.active')
+        , value = item.attr('data-value')
+      this.$element.val(value)
       this.$element.change()
-      if (this.keyValue) {
-        var key = this.$menu.find('.active').attr('data-key')
-          , retVal
-        this.$hidden.val(key)
-        this.$element.trigger('selected', key)
-        retVal = this.hide()
-        return retVal
+      if (this.objectSource) {
+        var label = item.attr('data-label')
+        this.$hidden.val(value)
+        this.$element.trigger('selected', [value, label])
+      } else {
+        this.$element.trigger('selected', value)
       }
       return this.hide()
     }
@@ -113,8 +121,8 @@
     }
 
   , matcher: function (item) {
-      if (this.keyValue) item = item.val
-      return ~item.toLowerCase().indexOf(this.query.toLowerCase())
+      var label = this.label(item)
+      return ~label.toLowerCase().indexOf(this.query.toLowerCase())
     }
 
   , sorter: function (items) {
@@ -124,14 +132,9 @@
         , item
 
       while (item = items.shift()) {
-        if (this.keyValue) {
-          if (!item.val.toLowerCase().indexOf(this.query.toLowerCase())) beginswith.push(item)
-          else if (~item.val.indexOf(this.query)) caseSensitive.push(item)
-          else caseInsensitive.push(item)
-          continue
-        }
-        if (!item.toLowerCase().indexOf(this.query.toLowerCase())) beginswith.push(item)
-        else if (~item.indexOf(this.query)) caseSensitive.push(item)
+        var label = this.label(item)
+        if (!label.toLowerCase().indexOf(this.query.toLowerCase())) beginswith.push(item)
+        else if (~label.indexOf(this.query)) caseSensitive.push(item)
         else caseInsensitive.push(item)
       }
 
@@ -139,7 +142,8 @@
     }
 
   , highlighter: function (item) {
-      return item.replace(new RegExp('(' + this.query + ')', 'ig'), function ($1, match) {
+      var label = this.label(item)
+      return label.replace(new RegExp('(' + this.query + ')', 'ig'), function ($1, match) {
         return '<strong>' + match + '</strong>'
       })
     }
@@ -148,15 +152,8 @@
       var that = this
 
       items = $(items).map(function (i, item) {
-        if (that.keyValue) {
-          i = $(that.options.item).attr({
-            'data-key': item.key
-          , 'data-value': item.val
-          })
-          i.find('a').html(that.highlighter(item.val))
-          return i[0]
-        }
-        i = $(that.options.item).attr('data-value', item)
+        i = $(that.options.item).attr('data-label', that.label(item))
+        if (that.objectSource) i.attr('data-value', that.value(item))
         i.find('a').html(that.highlighter(item))
         return i[0]
       })

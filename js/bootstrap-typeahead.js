@@ -30,14 +30,18 @@
     this.matcher = this.options.matcher || this.matcher
     this.sorter = this.options.sorter || this.sorter
     this.highlighter = this.options.highlighter || this.highlighter
-    if (this.options.insertAfterElement) {
-      this.$menu = $(this.options.menu).insertAfter(this.$element)
-    } else {
+    if (this.options.appendToBody) {
       this.$menu = $(this.options.menu).appendTo('body')
+    } else {
+      this.$menu = $(this.options.menu).insertAfter(this.$element)
     }
     this.source = this.options.source
     this.shown = false
-    this.objectSource = this.source.length > 0 && $.isPlainObject(this.source[0])
+    if (this.options.objectSource) {
+      this.objectSource = true
+    } else {
+      this.objectSource = this.source.length > 0 && $.isPlainObject(this.source[0])
+    }
     if (this.objectSource) {
       var hidden = $('<input>')
       hidden.attr('type', 'hidden')
